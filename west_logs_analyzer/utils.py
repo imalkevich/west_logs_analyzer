@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 def get_days_range(interval):
     end = datetime.now() + timedelta(days=-1)
-    start = end + timedelta(days=-1*interval)
+    start = end + timedelta(days=-1*interval+1)
     span = end - start
     days_range = [(start + timedelta(days=i)).date() for i in range(span.days + 1)]
     return days_range

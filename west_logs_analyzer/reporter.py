@@ -1,43 +1,46 @@
+import os
 import smtplib
 
 from datetime import datetime
+from email import encoders
 from email.message import EmailMessage
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from prettytable import PrettyTable
 
 from west_logs_analyzer.configuration import CONFIGURATION
 
 class ErrorEmailNotificator(object):
-    def __init__(self, logs, days, groups):
-        self.logs = logs
+    def __init__(self, days, results, image):
         self.days = days
-        self.groups = groups
-    
-    def _intersection(self, lst1, lst2):
-        return list(set(lst1) & set(lst2))
+        self.results = results
+        self.image = image
 
-    def _get_log_counts(self, day, group_items):
-        items = [event_id for (event_id, timestamp, _) in self.logs if 
-            timestamp.year == day.year and timestamp.month == day.month and timestamp.day == day.day]
-        counts = len(self._intersection(group_items, items))
-        return counts
+    def _attach_file(self, file_name):
+        part = MIMEBase('application', 'octect-stream')
+        part.set_payload(open(file_name, 'rb').read())
+        encoders.encode_base64(part)
+        part.add_header('Content-Disposition', 'attachment; filename=%s' % os.path.basename(file_name))
+        return part
 
     def _create_table(self):
         tbl = PrettyTable()
 
+        if self.results is None or len(self.results) == 0: 
+            return tbl
+
         tbl.field_names = ['#', 'Short text']
 
-        for day in self.days:
+        (_, _, errors) = self.results[0]
+        for (day, _) in errors:
             tbl.field_names.append(day.strftime('%m/%d/%Y'))
 
-        for idx, key in enumerate(self.groups):
-            row = [idx]
-            
-            text = self.groups[key]['text']
-            row.append(text)
+        for (idx, text, errors) in self.results:
+            row = [idx, text]
 
-            for day in self.days:
-                count = self._get_log_counts(day, self.groups[key]['items'])
+            for (_, count) in errors:
                 row.append(count)
 
             tbl.add_row(row)
@@ -69,14 +72,16 @@ class ErrorEmailNotificator(object):
 
         config = CONFIGURATION['email']
 
-        msg = EmailMessage()
+        msg = MIMEMultipart()
 
         msg['Subject'] = config['subject_template'].format(start = self.days[0].strftime('%Y-%m-%d'), 
             end = self.days[len(self.days) - 1].strftime('%Y-%m-%d'))
-        msg.set_content(body)
+        #msg.set_content(body)
         msg['From'] = config['from']
         msg['To'] = config['to']
-        msg.replace_header('Content-type', 'text/html')
+        msg.attach(self._attach_file(self.image))
+        msg.attach(MIMEText(body, 'html'))
+        #msg.replace_header('Content-type', 'text/html')
 
         server = smtplib.SMTP(config['relay_server'])
         server.ehlo()

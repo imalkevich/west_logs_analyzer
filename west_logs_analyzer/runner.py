@@ -1,10 +1,12 @@
 import argparse
+import tempfile
 
 from datasketch.minhash import MinHash
 from datasketch.lsh import MinHashLSH
 
 from west_logs_analyzer import __version__
-from west_logs_analyzer.import_logs import SqlLogsRetriever
+from west_logs_analyzer.chart_builder import StackedBarChartBuilder
+from west_logs_analyzer.import_logs import FakeRetriever, SqlLogsRetriever
 from west_logs_analyzer.reporter import ErrorEmailNotificator
 from west_logs_analyzer.utils import get_days_range, print_now
 
@@ -23,10 +25,41 @@ class Runner(object):
         
         groups = self._group_logs(min_hashes, lsh)
 
+        results = self._prepare_results(groups)
+
+        temp_file = open('chart.png', 'w')
+        chart = StackedBarChartBuilder(self.days_range, results)
+        chart.build_chart(temp_file.name)
+        temp_file.close()
+
         print_now('Just about to send notification')
-        notificator = ErrorEmailNotificator(self.data, self.days_range, groups)
+        notificator = ErrorEmailNotificator(self.days_range, results, temp_file.name)
         notificator.send_notification()
         print_now('Done')
+
+    def _prepare_results(self, groups):
+        results = []
+
+        for idx, key in enumerate(groups):
+            text = groups[key]['text']
+
+            errors = []
+            for day in self.days_range:
+                count = self._get_log_counts(day, groups[key]['items'])
+                errors.append((day, count))
+
+            results.append((idx, text, errors))
+
+        return results
+
+    def _intersection(self, lst1, lst2):
+        return list(set(lst1) & set(lst2))
+
+    def _get_log_counts(self, day, group_items):
+        items = [event_id for (event_id, timestamp, _) in self.data if 
+            timestamp.year == day.year and timestamp.month == day.month and timestamp.day == day.day]
+        counts = len(self._intersection(group_items, items))
+        return counts
 
     def _collect_log_data(self):
         for day in self.days_range:

@@ -5,30 +5,36 @@ from .configuration import CONFIGURATION
 
 class FakeRetriever(object):
     def __init__(self, user, pwd):
+        self.call_count = 0
         pass
 
     def get_logs(self, day):
-        if day.day == 20:
-            return [
+        logs = []
+        if self.call_count == 0:
+            logs = [
                 ('1', day, 'some logs from me'),
                 ('2', day, 'some logs from my daughter'),
                 ('3', day, 'some logs from my mother'),
                 ('4', day, 'some logs from my father')
             ]
-        if day.day == 21:
-            return [
+        elif self.call_count == 1:
+            logs = [
                 ('5', day, 'data analytics is hard'),
                 ('6', day, 'data analytics is slow'),
                 ('7', day, 'data analytics is paid well'),
                 ('8', day, 'data analytics is respectful')
             ]
-        if day.day == 22:
-            return [
+        else:
+            logs = [
                 ('9', day, 'Cobalt is project with complex module interactions'),
                 ('10', day, 'Cobalt is project with complex business rules'),
                 ('11', day, 'Cobalt is project with complex deployment'),
                 ('12', day, 'Cobalt is project with complex billing')
             ]
+
+        self.call_count+=1
+
+        return logs
 
 class SqlLogsRetriever(object):
     def __init__(self, user, pwd):
