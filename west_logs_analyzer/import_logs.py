@@ -17,6 +17,9 @@ class FakeRetriever(object):
                 ('3', day, 'some logs from my mother'),
                 ('4', day, 'some logs from my father')
             ]
+
+            for i in range(0, 500):
+                logs.append((i, day, 'some {} logs'.format(str(i))))
         elif self.call_count == 1:
             logs = [
                 ('5', day, 'data analytics is hard'),
