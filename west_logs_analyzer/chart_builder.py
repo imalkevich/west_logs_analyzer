@@ -17,6 +17,8 @@ class StackedBarChartBuilder(object):
 
         for (idx, _, errors) in self.results:
             counts = [count for (_, count) in errors]
+            if sum(counts) == 0: 
+                continue
             texts.append('group_{} ({})'.format(idx, ' '.join([str(c) for c in counts])))
             bars.append(plt.bar(ind, counts, width, bottom=bottom))
             bottom = list(map(add, bottom, counts))
