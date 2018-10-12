@@ -18,21 +18,23 @@ class FakeRetriever(object):
                 ('4', day, 'some logs from my father')
             ]
 
-            for i in range(0, 500):
-                logs.append((i, day, 'some {} logs'.format(str(i))))
+            #for i in range(0, 500):
+            #    logs.append((i, day, 'some {} logs'.format(str(i))))
         elif self.call_count == 1:
             logs = [
-                ('5', day, 'data analytics is hard'),
-                ('6', day, 'data analytics is slow'),
-                ('7', day, 'data analytics is paid well'),
-                ('8', day, 'data analytics is respectful')
+                ('5', day, 'some logs from me'),
+                ('6', day, 'data analytics is hard'),
+                ('7', day, 'data analytics is slow'),
+                ('8', day, 'data analytics is paid well'),
+                ('9', day, 'data analytics is respectful')
             ]
         else:
             logs = [
-                ('9', day, 'Cobalt is project with complex module interactions'),
-                ('10', day, 'Cobalt is project with complex business rules'),
-                ('11', day, 'Cobalt is project with complex deployment'),
-                ('12', day, 'Cobalt is project with complex billing')
+                ('10', day, 'some logs from me'),
+                ('11', day, 'Cobalt is project with complex module interactions'),
+                ('12', day, 'Cobalt is project with complex business rules'),
+                ('13', day, 'Cobalt is project with complex deployment'),
+                ('14', day, 'Cobalt is project with complex billing')
             ]
 
         self.call_count+=1
